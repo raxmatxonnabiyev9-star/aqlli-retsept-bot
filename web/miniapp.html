@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Aqlli Retsept</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: #0e1015;
+    --card: #1b1e26;
+    --card2: #20242e;
+    --text: #f2f3f5;
+    --muted: #8b909c;
+    --accent: #f26321;
+    --accent-soft: rgba(242, 99, 33, 0.14);
+    --green: #29c46b;
+    --line: #2a2e38;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding-bottom: 32px;
+  }
+  .hidden { display: none !important; }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    padding: 28px 20px 18px;
+    background: linear-gradient(180deg, #171a22 0%, var(--bg) 100%);
+  }
+  .hero-img {
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+    border-radius: 18px;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .hero-icon {
+    width: 96px; height: 96px;
+    margin: 6px auto 14px;
+    border-radius: 50%;
+    background: #5b53b0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 46px;
+    box-shadow: 0 8px 24px rgba(91,83,176,0.35);
+  }
+  .hero h1 { margin: 0 0 6px; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+  .hero .sub { color: var(--muted); font-size: 14px; }
+
+  /* ── BADGES ── */
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 20px 4px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 13px; border-radius: 20px;
+    font-size: 13px; font-weight: 600;
+    background: var(--card);
+  }
+  .badge .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .badge.time { color: #ffb27a; background: rgba(242,99,33,0.12); }
+  .badge.diff .dot { background: var(--green); }
+  .badge.cuisine .dot { background: #3aa0ff; }
+
+  /* ── TABS ── */
+  .tabs { display: flex; border-bottom: 1px solid var(--line); margin: 16px 0 0; position: sticky; top: 0; background: var(--bg); z-index: 5; }
+  .tab {
+    flex: 1; text-align: center; padding: 15px 4px;
+    color: var(--muted); font-size: 14.5px; font-weight: 600;
+    cursor: pointer; border-bottom: 2px solid transparent;
+    transition: color .15s;
+  }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  .panel { padding: 20px; display: none; }
+  .panel.active { display: block; animation: fade .2s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .section-title { font-size: 12px; letter-spacing: 1.5px; color: var(--muted); font-weight: 700; margin: 0 0 14px; }
+
+  /* ── INGREDIENTS GRID ── */
+  .ing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ing-card {
+    background: var(--card); border-radius: 14px; padding: 14px 14px 14px 16px;
+    position: relative; overflow: hidden;
+  }
+  .ing-card::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+    background: var(--dot, var(--accent));
+  }
+  .ing-card .nom { font-weight: 700; font-size: 15px; margin-bottom: 3px; }
+  .ing-card .miqdor { color: var(--muted); font-size: 13px; }
+
+  /* ── STEPS ── */
+  .step { display: flex; gap: 14px; padding: 6px 0 22px; }
+  .step:not(:last-child) { border-bottom: 1px solid var(--line); margin-bottom: 6px; }
+  .step-num {
+    flex: 0 0 30px; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step-body { flex: 1; }
+  .step-body .st { font-weight: 700; font-size: 16px; margin: 3px 0 6px; }
+  .step-body .desc { color: #c8ccd4; font-size: 14.5px; line-height: 1.55; }
+  .step-time { color: #6fb1ff; font-size: 13px; margin-top: 8px; font-weight: 600; }
+  .tip {
+    margin-top: 10px; padding: 11px 13px; border-radius: 10px;
+    background: var(--accent-soft); border-left: 3px solid var(--accent);
+    color: #ffce9e; font-size: 13.5px; line-height: 1.5;
+  }
+
+  /* ── ADVICE ── */
+  .advice-box { background: rgba(41,196,107,0.08); border: 1px solid rgba(41,196,107,0.25); border-radius: 14px; padding: 16px; }
+  .advice { display: flex; gap: 11px; font-size: 14.5px; line-height: 1.5; color: #d6dae2; }
+  .advice:not(:last-child) { margin-bottom: 14px; }
+  .advice .ico { flex: 0 0 22px; font-size: 18px; }
+
+  /* ── NUTRITION ── */
+  .nut-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 22px; }
+  .nut { background: var(--card); border-radius: 14px; padding: 14px 8px; text-align: center; }
+  .nut .val { font-size: 18px; font-weight: 800; }
+  .nut .lab { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ── LOADER / ERROR ── */
+  .center { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: var(--muted); }
+  .spinner { width: 42px; height: 42px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div id="loading" class="center">
+  <div class="spinner"></div>
+  <div>Retsept tayyorlanyapti...</div>
+</div>
+
+<div id="error" class="center hidden">
+  <div style="font-size:42px">😔</div>
+  <div>Retseptni yuklab bo'lmadi.</div>
+</div>
+
+<div id="content" class="hidden">
+  <div class="hero">
+    <img id="heroImg" class="hero-img hidden" alt="">
+    <div id="heroIcon" class="hero-icon">🍳</div>
+    <h1 id="title"></h1>
+    <div class="sub" id="subtitle"></div>
+  </div>
+
+  <div class="badges">
+    <span class="badge time">⏱ <span id="bTime"></span></span>
+    <span class="badge diff"><span class="dot"></span><span id="bDiff"></span></span>
+    <span class="badge cuisine"><span class="dot"></span><span id="bCuisine"></span></span>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="ing">Masalliqlar</div>
+    <div class="tab" data-tab="steps">Tayyorlash</div>
+    <div class="tab" data-tab="tips">Maslahatlar</div>
+  </div>
+
+  <div class="panel active" id="panel-ing">
+    <div class="section-title">KERAKLI MASALLIQLAR</div>
+    <div class="ing-grid" id="ingGrid"></div>
+  </div>
+
+  <div class="panel" id="panel-steps">
+    <div class="section-title">BOSQICHMA-BOSQICH</div>
+    <div id="stepsList"></div>
+  </div>
+
+  <div class="panel" id="panel-tips">
+    <div class="section-title">OSHPAZ MASLAHATLARI</div>
+    <div class="advice-box" id="adviceBox"></div>
+    <div class="section-title" style="margin-top:24px">OZUQA QIYMATI (TAXMINIY)</div>
+    <div class="nut-grid" id="nutGrid"></div>
+  </div>
+</div>
+
+<script>
+  // Telegram WebApp SDK (Telegram ichida bo'lsa) — kengaytirish va mavzu
+  const tg = window.Telegram && window.Telegram.WebApp;
+  if (tg) { tg.ready(); tg.expand(); }
+
+  const DOT_COLORS = ["#f26321", "#f2c531", "#9b7bff", "#ff7ab3", "#29c46b", "#3aa0ff", "#ff6b6b"];
+
+  // Demo retsept (brauzerda backend'siz ko'rish uchun: ?demo=1)
+  const DEMO = {
+    taom: "Qovurma kartoshka", oshxona: "O'zbek", vaqt_daqiqa: 25,
+    qiyinlik: "Oson", porsiya: "2 kishi uchun",
+    masalliqlar: [
+      {nom:"Kartoshka", miqdor:"3 ta (o'rta)"}, {nom:"Tuxum", miqdor:"2 ta"},
+      {nom:"Piyoz", miqdor:"1 ta (katta)"}, {nom:"O'simlik yog'i", miqdor:"3 osh q."},
+      {nom:"Tuz", miqdor:"ta'mga qarab"}, {nom:"Ko'k piyoz", miqdor:"bir dasta (ixtiyoriy)"}
+    ],
+    bosqichlar: [
+      {raqam:1, sarlavha:"Kartoshkani tayyorlang", tavsif:"Kartoshkani artib, po'stlog'ini tozalang. Ingichka doira yoki tasmachalar shaklida to'g'rang — 3–4 mm qalinlikda.", maslahat:"To'g'rangan kartoshkani 5 daqiqa sovuq suvda tuting — kraxmal chiqadi va qovurilganda qars-qars bo'ladi", vaqt_daqiqa:5},
+      {raqam:2, sarlavha:"Piyozni qovuring", tavsif:"Piyozni yarimdoira shaklida to'g'rang. Katta idishga yog' solib, o'rtacha o'tda piyozni oltin rang bo'lguncha qovuring.", maslahat:"Piyoz shaffof bo'lib oltin rangga kirsa — to'g'ri vaqt. Qorayib ketsa achchiq bo'ladi", vaqt_daqiqa:6}
+    ],
+    oshpaz_maslahatlari: [
+      "Idish yaxshi qizib olgan bo'lishi kerak, aks holda kartoshka yopishadi",
+      "Tuzni oxirida soling, boshida solsangiz suv chiqib qovurilmaydi"
+    ],
+    kaloriya:320, oqsil:"12g", uglerod:"38g", yog_miqdori:"14g"
+  };
+
+  function render(r) {
+    document.getElementById("title").textContent = r.taom || "Taom";
+    document.getElementById("subtitle").textContent =
+      `${r.oshxona || ""} oshxonasi • ${r.porsiya || ""}`;
+    document.getElementById("bTime").textContent = (r.vaqt_daqiqa || "?") + " daqiqa";
+    document.getElementById("bDiff").textContent = r.qiyinlik || "—";
+    document.getElementById("bCuisine").textContent = r.oshxona || "—";
+
+    if (r.rasm_url) {
+      const img = document.getElementById("heroImg");
+      img.src = r.rasm_url; img.classList.remove("hidden");
+      document.getElementById("heroIcon").classList.add("hidden");
+    }
+
+    // Masalliqlar
+    const ig = document.getElementById("ingGrid");
+    (r.masalliqlar || []).forEach((m, i) => {
+      const d = document.createElement("div");
+      d.className = "ing-card";
+      d.style.setProperty("--dot", DOT_COLORS[i % DOT_COLORS.length]);
+      d.innerHTML = `<div class="nom"></div><div class="miqdor"></div>`;
+      d.querySelector(".nom").textContent = m.nom || "";
+      d.querySelector(".miqdor").textContent = m.miqdor || "";
+      ig.appendChild(d);
+    });
+
+    // Bosqichlar
+    const sl = document.getElementById("stepsList");
+    (r.bosqichlar || []).forEach((b) => {
+      const s = document.createElement("div");
+      s.className = "step";
+      let html = `<div class="step-num">${b.raqam || ""}</div><div class="step-body">`;
+      html += `<div class="st"></div><div class="desc"></div>`;
+      if (b.vaqt_daqiqa) html += `<div class="step-time">⏱ ${b.vaqt_daqiqa} daqiqa</div>`;
+      if (b.maslahat) html += `<div class="tip">💡 <span class="tiptext"></span></div>`;
+      html += `</div>`;
+      s.innerHTML = html;
+      s.querySelector(".st").textContent = b.sarlavha || "";
+      s.querySelector(".desc").textContent = b.tavsif || "";
+      if (b.maslahat) s.querySelector(".tiptext").textContent = b.maslahat;
+      sl.appendChild(s);
+    });
+
+    // Maslahatlar
+    const ICONS = ["🔥","🔪","🧂","🌶️","🍽️","✨","👨‍🍳"];
+    const ab = document.getElementById("adviceBox");
+    (r.oshpaz_maslahatlari || []).forEach((m, i) => {
+      const a = document.createElement("div");
+      a.className = "advice";
+      a.innerHTML = `<span class="ico">${ICONS[i % ICONS.length]}</span><span class="txt"></span>`;
+      a.querySelector(".txt").textContent = m;
+      ab.appendChild(a);
+    });
+
+    // Ozuqa
+    const nuts = [
+      {val: r.kaloriya, lab: "Kaloriya"}, {val: r.oqsil, lab: "Oqsil"},
+      {val: r.uglerod, lab: "Uglerod"}, {val: r.yog_miqdori, lab: "Yog'"}
+    ];
+    const ng = document.getElementById("nutGrid");
+    nuts.forEach(n => {
+      const d = document.createElement("div");
+      d.className = "nut";
+      d.innerHTML = `<div class="val"></div><div class="lab"></div>`;
+      d.querySelector(".val").textContent = (n.val ?? "—");
+      d.querySelector(".lab").textContent = n.lab;
+      ng.appendChild(d);
+    });
+
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("content").classList.remove("hidden");
+  }
+
+  function showError() {
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("error").classList.remove("hidden");
+  }
+
+  // Tab almashtirish
+  document.querySelectorAll(".tab").forEach(t => {
+    t.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(x => x.classList.remove("active"));
+      t.classList.add("active");
+      document.getElementById("panel-" + t.dataset.tab).classList.add("active");
+    });
+  });
+
+  // Ma'lumotni yuklash: ?id=... bo'lsa backend'dan, ?demo=1 bo'lsa namuna
+  const params = new URLSearchParams(location.search);
+  if (params.get("demo")) {
+    render(DEMO);
+  } else {
+    const id = params.get("id");
+    if (!id) { showError(); }
+    else {
+      fetch(`/api/recipe/${encodeURIComponent(id)}`)
+        .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+        .then(render)
+        .catch(showError);
+    }
+  }
+</script>
+</body>
+</html>

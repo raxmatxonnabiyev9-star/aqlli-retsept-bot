@@ -1,0 +1,20 @@
+# Maxfiy kalitlar
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Baza indeks fayli
+recipe_index.json
+
+# IDE
+.vscode/
+.idea/
+
+# Claude Code lokal sozlamalari
+.claude/
