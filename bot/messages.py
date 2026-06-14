@@ -30,6 +30,11 @@ TAOM_TOPILMADI = (
 
 VARIANT_YOQ = "😔 Boshqa variant qolmadi. Yangi masalliqlar yuboring."
 
+SESSIYA_TUGADI = (
+    "🔄 Bot yangilangan yoki bu xabar eskirgan.\n"
+    "Iltimos, masalliqlaringizni qaytadan yuboring (masalan: tuxum, kartoshka, piyoz)."
+)
+
 SEVIMLI_QOSHILDI = "❤️ Retsept sevimlilarga qo'shildi!"
 
 

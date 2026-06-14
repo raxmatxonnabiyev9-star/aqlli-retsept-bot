@@ -163,7 +163,8 @@ async def _boshqa_variantlar(update: Update, context: ContextTypes.DEFAULT_TYPE)
     query = update.callback_query
     masalliqlar = context.user_data.get("masalliqlar")
     if not masalliqlar:
-        await query.message.reply_text(messages.VARIANT_YOQ)
+        # Bot restart bo'lgan/sessiya eskirgan — holat yo'qolgan
+        await query.message.reply_text(messages.SESSIYA_TUGADI)
         return
 
     try:
@@ -192,6 +193,10 @@ async def _retseptni_yubor(update: Update, context: ContextTypes.DEFAULT_TYPE, i
     taomlar = context.user_data.get("taomlar", [])
     masalliqlar = context.user_data.get("masalliqlar", [])
 
+    if not taomlar or not masalliqlar:
+        # Bot restart bo'lgan/sessiya eskirgan — holat yo'qolgan
+        await query.message.reply_text(messages.SESSIYA_TUGADI)
+        return
     if indeks >= len(taomlar):
         await query.message.reply_text(messages.VARIANT_YOQ)
         return
