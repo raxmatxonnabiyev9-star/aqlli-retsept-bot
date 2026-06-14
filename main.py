@@ -136,7 +136,9 @@ def _loopni_ishga_tushir(loop: asyncio.AbstractEventLoop) -> None:
 async def _webhook_sozla(app: Application, webhook_url: str, bot_token: str) -> None:
     """Application'ni ishga tushiradi, kanal servisini ulaydi va webhook'ni ro'yxatdan o'tkazadi."""
     await app.initialize()
-    app.bot_data["channel"] = ChannelService(bot=app.bot, channel_id=app.bot_data["channel_id"])
+    kanal = ChannelService(bot=app.bot, channel_id=app.bot_data["channel_id"])
+    await kanal.yukla()  # kanaldagi pinned indeksdan ma'lum imzolarni yuklaymiz
+    app.bot_data["channel"] = kanal
     await app.start()
     toliq_url = f"{webhook_url.rstrip('/')}/webhook/{bot_token}"
     await app.bot.set_webhook(url=toliq_url, allowed_updates=["message", "callback_query"])
@@ -170,10 +172,12 @@ def polling_rejimida_ishga_tushir(app: Application) -> None:
     """Lokal sinov uchun oddiy polling rejimi (WEBHOOK_URL bo'sh bo'lsa)."""
 
     async def _post_init(application: Application) -> None:
-        """Polling boshlanishidan oldin kanal servisini ulaydi."""
-        application.bot_data["channel"] = ChannelService(
+        """Polling boshlanishidan oldin kanal servisini ulaydi va indeksni yuklaydi."""
+        kanal = ChannelService(
             bot=application.bot, channel_id=application.bot_data["channel_id"]
         )
+        await kanal.yukla()
+        application.bot_data["channel"] = kanal
 
     app.post_init = _post_init
 

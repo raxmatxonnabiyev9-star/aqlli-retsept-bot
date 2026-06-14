@@ -1,127 +1,131 @@
-"""Telegram kanal bazasi servisi.
+"""Telegram kanal bazasi servisi (dublikatlarsiz, doimiy indeks bilan).
 
 Retseptlar @AqllRetseptBaza kanaliga rasm + caption ko'rinishida saqlanadi.
-Telegram Bot API botlarga kanal tarixini to'g'ridan-to'g'ri qidirishga ruxsat
-bermaydi, shuning uchun biz mahalliy indeks fayli (recipe_index.json) yuritamiz:
-har bir saqlangan retsept hashtaglari va to'liq JSON bilan birga yoziladi.
-Qidirishda foydalanuvchi masalliqlarining hashtaglari indeks bilan solishtiriladi.
+Telegram Bot API botlarga kanal tarixini qidirishga ruxsat bermaydi, shuning
+uchun bot indeksni kanaldagi **pinned (qadalgan) xabarda** JSON sifatida yuritadi:
+har bir saqlangan retseptning "imzosi" (signature) shu yerga yoziladi.
 
-Bu yondashuv kanalni "bepul baza" sifatida ishlatish imkonini beradi: mos retsept
-indeksda topilsa, Claude API qayta chaqirilmaydi.
+- Imzo (sig) = saralangan masalliqlar + tanlangan taom nomi. Bir xil so'rov →
+  bir xil imzo → dublikat aniqlanadi.
+- Pinned xabar Render "uyqu"sidan (restart) keyin ham saqlanadi — shuning uchun
+  bir xil retsept kanalga qayta tashlanmaydi.
+- To'liq retseptlar shu sessiya davomida xotirada keshlanadi (Gemini'ni qayta
+  chaqirmaslik uchun); restart'dan keyin kesh tozalanadi, lekin dublikat baribir
+  yuborilmaydi (imzo pinned xabarda saqlangani uchun).
+
+Eslatma: bot kanalda "Xabarlarni qadash" (Pin Messages) huquqiga ega bo'lsa,
+indeks restart'lardan omon qoladi. Huquq bo'lmasa — faqat shu sessiyada ishlaydi.
 """
 
 import json
 import logging
-import os
 
 from telegram import Bot
 
 logger = logging.getLogger(__name__)
 
-INDEKS_FAYL = "recipe_index.json"
+# Pinned indeks xabarining boshlang'ich belgisi (uni oddiy postlardan ajratish uchun)
+MARKER = "AQLLI_RETSEPT_INDEX_V1"
 
-# Qidiruvda retsept mos deb topilishi uchun kerakli minimal hashtag mosligi
-MIN_MOSLIK = 2
+# Pinned xabarda saqlanadigan imzolar soni cheklovi (Telegram 4096 belgi)
+MAX_IMZO = 800
 
 
 class ChannelService:
-    """Retseptlarni Telegram kanalga saqlash va mahalliy indeks orqali qidirish servisi."""
+    """Retseptlarni kanalga dublikatsiz saqlovchi va imzolar indeksini yurituvchi servis."""
 
-    def __init__(self, bot: Bot, channel_id: str, indeks_fayl: str = INDEKS_FAYL) -> None:
-        """Bot, kanal ID va indeks fayl yo'li bilan servisni ishga tushiradi."""
+    def __init__(self, bot: Bot, channel_id: str) -> None:
+        """Bot va kanal ID bilan servisni ishga tushiradi."""
         self._bot = bot
         self._channel_id = channel_id
-        self._indeks_fayl = indeks_fayl
-        self._indeks: list[dict] = self._indeksni_yukla()
+        self._kesh: dict[str, dict] = {}   # sig -> to'liq retsept (shu sessiya uchun)
+        self._imzolar: list[str] = []      # ma'lum imzolar (pinned xabarda saqlanadi)
+        self._pin_id: int | None = None     # pinned indeks xabarining ID si
 
     # ──────────────────────────────────────────
-    # Indeks fayli bilan ishlash
+    # Indeksni kanaldan yuklash / kanalga yozish
     # ──────────────────────────────────────────
 
-    def _indeksni_yukla(self) -> list[dict]:
-        """Mahalliy indeks faylini o'qiydi (mavjud bo'lmasa bo'sh ro'yxat qaytaradi)."""
-        if not os.path.exists(self._indeks_fayl):
-            return []
+    async def yukla(self) -> None:
+        """Kanaldagi pinned indeks xabaridan ma'lum imzolarni yuklaydi (startda chaqiriladi)."""
         try:
-            with open(self._indeks_fayl, "r", encoding="utf-8") as f:
-                return json.load(f)
+            chat = await self._bot.get_chat(self._channel_id)
+            pin = getattr(chat, "pinned_message", None)
+            if pin and pin.text and pin.text.startswith(MARKER):
+                malumot = json.loads(pin.text[len(MARKER):].strip())
+                self._imzolar = malumot.get("imzolar", [])
+                self._pin_id = pin.message_id
+                logger.info("Kanal indeksi yuklandi: %d ta imzo", len(self._imzolar))
         except Exception as e:  # noqa: BLE001
-            logger.error("Indeks faylini o'qib bo'lmadi: %s", e)
-            return []
+            logger.error("Kanal indeksini yuklashda xato: %s", e)
 
-    def _indeksni_saqla(self) -> None:
-        """Indeksni faylga yozadi."""
+    async def _pinni_yangila(self) -> None:
+        """Ma'lum imzolar ro'yxatini pinned xabarda yangilaydi (yo'q bo'lsa yaratib qadaydi)."""
         try:
-            with open(self._indeks_fayl, "w", encoding="utf-8") as f:
-                json.dump(self._indeks, f, ensure_ascii=False, indent=2)
+            imzolar = self._imzolar[-MAX_IMZO:]
+            matn = (MARKER + "\n" + json.dumps({"imzolar": imzolar}, ensure_ascii=False))[:4090]
+            if self._pin_id:
+                await self._bot.edit_message_text(
+                    chat_id=self._channel_id, message_id=self._pin_id, text=matn
+                )
+            else:
+                xabar = await self._bot.send_message(chat_id=self._channel_id, text=matn)
+                self._pin_id = xabar.message_id
+                try:
+                    await self._bot.pin_chat_message(
+                        chat_id=self._channel_id,
+                        message_id=self._pin_id,
+                        disable_notification=True,
+                    )
+                except Exception as e:  # noqa: BLE001
+                    logger.warning(
+                        "Indeks xabarini qadab bo'lmadi (botga 'Pin Messages' huquqini "
+                        "bering — aks holda restart'dan keyin dublikat bo'lishi mumkin): %s", e
+                    )
         except Exception as e:  # noqa: BLE001
-            logger.error("Indeks faylini saqlab bo'lmadi: %s", e)
+            logger.error("Pinned indeksni yangilashda xato: %s", e)
 
     # ──────────────────────────────────────────
-    # Qidirish va saqlash
+    # Kesh va saqlash
     # ──────────────────────────────────────────
 
-    async def qidir(self, hashtaglar: list[str]) -> dict | None:
-        """Berilgan hashtaglar bo'yicha bazadan mos retseptni qidiradi.
+    def keshdan(self, sig: str) -> dict | None:
+        """Shu sessiyada keshlangan retseptni imzo bo'yicha qaytaradi (bo'lmasa None)."""
+        return self._kesh.get(sig)
 
-        Kamida MIN_MOSLIK ta hashtag mos kelsa, eng ko'p mos kelgan retsept
-        (to'liq JSON dict) qaytariladi. Aks holda None.
+    def bor(self, sig: str) -> bool:
+        """Bu imzo bo'yicha retsept allaqachon kanalga yuborilganmi?"""
+        return sig in self._imzolar
+
+    async def saqla(self, retsept: dict, caption: str, rasm_url: str | None, sig: str) -> None:
+        """Retseptni keshga qo'shadi va (faqat yangi bo'lsa) kanalga yuboradi.
+
+        Imzo allaqachon ma'lum bo'lsa — kanalga qayta yuborilmaydi (dublikat oldi olinadi).
         """
+        # Shu sessiya uchun keshga qo'yamiz (qayta ishlatish uchun)
+        self._kesh[sig] = retsept
+
+        if sig in self._imzolar:
+            logger.info("Retsept allaqachon bazada — kanalga qayta yuborilmadi: %s",
+                        retsept.get("taom"))
+            return
+
+        # Yangi retsept — kanalga joylaymiz
         try:
-            soralgan = set(hashtaglar)
-            eng_yaxshi: dict | None = None
-            eng_yaxshi_moslik = 0
-            for yozuv in self._indeks:
-                yozuv_teglari = set(yozuv.get("hashtaglar", []))
-                moslik = len(soralgan & yozuv_teglari)
-                if moslik > eng_yaxshi_moslik:
-                    eng_yaxshi_moslik = moslik
-                    eng_yaxshi = yozuv
-            if eng_yaxshi and eng_yaxshi_moslik >= MIN_MOSLIK:
-                logger.info("Baza: %d ta hashtag mos keldi", eng_yaxshi_moslik)
-                return eng_yaxshi.get("retsept")
-            return None
-        except Exception as e:  # noqa: BLE001
-            # Qidiruv xatosi — chaqiruvchi to'g'ridan-to'g'ri Claude ga o'tadi
-            logger.error("Kanal qidiruv xatosi: %s", e)
-            return None
-
-    async def saqla(self, retsept: dict, caption: str, rasm_url: str | None) -> None:
-        """Yangi retseptni kanalga (rasm + caption) joylaydi va indeksga qo'shadi.
-
-        Telegram caption uzunligi cheklangani (1024 belgi) sababli, juda uzun
-        caption qisqartiriladi yoki rasm bo'lmasa oddiy matn sifatida yuboriladi.
-        """
-        hashtaglar = retsept.get("hashtag", "").split()
-
-        try:
-            # Caption Telegram cheklovidan oshmasligi uchun qisqartiramiz
-            qisqa_caption = caption[:1024]
             if rasm_url:
                 await self._bot.send_photo(
-                    chat_id=self._channel_id,
-                    photo=rasm_url,
-                    caption=qisqa_caption,
-                    parse_mode="Markdown",
+                    chat_id=self._channel_id, photo=rasm_url,
+                    caption=caption[:1024], parse_mode="Markdown",
                 )
             else:
                 await self._bot.send_message(
-                    chat_id=self._channel_id,
-                    text=caption[:4096],
-                    parse_mode="Markdown",
+                    chat_id=self._channel_id, text=caption[:4096], parse_mode="Markdown",
                 )
             logger.info("Retsept kanalga saqlandi: %s", retsept.get("taom"))
         except Exception as e:  # noqa: BLE001
-            # Kanalga yozish xatosi botni to'xtatmasligi kerak
             logger.error("Kanalga saqlashda xato: %s", e)
+            return  # yuborilmadi — imzoni ham qo'shmaymiz
 
-        # Mahalliy indeksga qo'shamiz (kanalga yozish muvaffaqiyatidan qat'i nazar)
-        self._indeks.append(
-            {
-                "taom": retsept.get("taom"),
-                "hashtaglar": hashtaglar,
-                "rasm_url": rasm_url,
-                "retsept": retsept,
-            }
-        )
-        self._indeksni_saqla()
+        # Imzoni indeksga qo'shib, pinned xabarni yangilaymiz
+        self._imzolar.append(sig)
+        await self._pinni_yangila()

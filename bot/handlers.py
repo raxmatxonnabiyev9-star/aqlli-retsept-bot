@@ -209,13 +209,14 @@ async def _retseptni_yubor(update: Update, context: ContextTypes.DEFAULT_TYPE, i
         chat_id=query.message.chat_id, action=ChatAction.TYPING
     )
 
-    # 1) Kanal bazasidan qidiramiz
-    hashtaglar = normalizer.top_hashtaglar(masalliqlar)
-    retsept = await _channel(context).qidir(hashtaglar)
-    bazadan = retsept is not None
+    # Imzo: saralangan masalliqlar + tanlangan taom (bir xil so'rov → bir xil imzo)
+    sig = "|".join(sorted(masalliqlar)) + "::" + taom_nomi.strip().lower()
 
-    # 2) Bazada topilmasa — Claude API
-    if not retsept:
+    # 1) Shu sessiyada keshlangan bo'lsa — qayta ishlatamiz (Gemini chaqirilmaydi)
+    retsept = _channel(context).keshdan(sig)
+
+    # 2) Keshda yo'q bo'lsa — Gemini orqali yaratamiz
+    if retsept is None:
         try:
             retsept = await _claude(context).toliq_retsept(taom_nomi, masalliqlar)
         except AIXatosi:
@@ -279,7 +280,6 @@ async def _retseptni_yubor(update: Update, context: ContextTypes.DEFAULT_TYPE, i
                 chat_id=chat_id, text=caption[:4096], reply_markup=klaviatura
             )
 
-    # 5) Yangi retsept bo'lsa — kanalga saqlaymiz
-    if not bazadan:
-        kanal_matn = messages.kanal_posti_matni(retsept)
-        await _channel(context).saqla(retsept, kanal_matn, rasm_url)
+    # 5) Keshga qo'shamiz va (faqat dublikat bo'lmasa) kanalga saqlaymiz
+    kanal_matn = messages.kanal_posti_matni(retsept)
+    await _channel(context).saqla(retsept, kanal_matn, rasm_url, sig)
