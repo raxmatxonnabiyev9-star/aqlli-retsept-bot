@@ -7,6 +7,8 @@ vaqtda ko'p foydalanuvchiga xizmat qila oladi.
 """
 
 import base64
+import gzip
+import json
 import logging
 import os
 
@@ -227,9 +229,11 @@ async def _retseptni_yubor(update: Update, context: ContextTypes.DEFAULT_TYPE, i
     base = (os.getenv("MINIAPP_URL") or os.getenv("WEBHOOK_URL") or "").rstrip("/")
 
     if base.startswith("https://"):
-        # Retseptni saqlab, Mini App (kartali web interfeys) havolasini yasaymiz
-        rid = recipe_store.saqla(retsept)
-        app_url = f"{base}/app?id={rid}"
+        # Retseptni havolaning o'ziga siqib joylaymiz (server xotirasiga bog'liq emas —
+        # bot qayta ishga tushsa ham havola buzilmaydi).
+        siqilgan = gzip.compress(json.dumps(retsept, ensure_ascii=False).encode("utf-8"))
+        d = base64.urlsafe_b64encode(siqilgan).decode("ascii")
+        app_url = f"{base}/app?d={d}"
         klaviatura = keyboards.miniapp_klaviaturasi(app_url)
         qisqa = messages.retsept_qisqa(retsept)
         try:

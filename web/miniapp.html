@@ -296,10 +296,25 @@
     });
   });
 
-  // Ma'lumotni yuklash: ?id=... bo'lsa backend'dan, ?demo=1 bo'lsa namuna
+  // Havoladagi siqilgan (gzip+base64) retsept ma'lumotini ochadi
+  async function gunzipB64(b64) {
+    const norm = b64.replace(/-/g, "+").replace(/_/g, "/");
+    const bin = atob(norm);
+    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+    const buf = await new Response(stream).arrayBuffer();
+    return JSON.parse(new TextDecoder("utf-8").decode(buf));
+  }
+
+  // Ma'lumotni yuklash:
+  //  ?d=...    -> retsept havolaning o'ziga siqib joylangan (asosiy usul)
+  //  ?id=...   -> eski usul, backend'dan (zaxira)
+  //  ?demo=1   -> namuna retsept
   const params = new URLSearchParams(location.search);
   if (params.get("demo")) {
     render(DEMO);
+  } else if (params.get("d")) {
+    gunzipB64(params.get("d")).then(render).catch(showError);
   } else {
     const id = params.get("id");
     if (!id) { showError(); }
