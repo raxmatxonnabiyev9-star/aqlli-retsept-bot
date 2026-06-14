@@ -2,132 +2,154 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Aqlli Retsept</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
-    --bg: #0e1015;
-    --card: #1b1e26;
-    --card2: #20242e;
-    --text: #f2f3f5;
-    --muted: #8b909c;
-    --accent: #f26321;
-    --accent-soft: rgba(242, 99, 33, 0.14);
-    --green: #29c46b;
-    --line: #2a2e38;
+    --bg-main: #0D0D0D;
+    --bg-hero: #150800;
+    --bg-food: #1C0C00;
+    --bg-card: #141414;
+    --bg-card2: #0A1400;
+    --accent: #FF6B35;
+    --border: #1E1E1E;
+    --text-primary: #FFFFFF;
+    --text-secondary: #666666;
+    --text-muted: #444444;
   }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
   body {
-    margin: 0;
-    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    padding-bottom: 32px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    max-width: 390px;
+    margin: 0 auto;
+    -webkit-overflow-scrolling: touch;
   }
   .hidden { display: none !important; }
 
   /* ── HERO ── */
-  .hero {
-    position: relative;
-    padding: 28px 20px 18px;
-    background: linear-gradient(180deg, #171a22 0%, var(--bg) 100%);
-  }
-  .hero-img {
-    width: 100%;
-    height: 190px;
-    object-fit: cover;
-    border-radius: 18px;
-    margin-bottom: 16px;
-    display: block;
-  }
-  .hero-icon {
-    width: 96px; height: 96px;
-    margin: 6px auto 14px;
-    border-radius: 50%;
-    background: #5b53b0;
+  .hero { background: var(--bg-hero); padding: 16px; }
+  .hero-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .logo {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: var(--accent);
     display: flex; align-items: center; justify-content: center;
-    font-size: 46px;
-    box-shadow: 0 8px 24px rgba(91,83,176,0.35);
+    font-size: 26px; flex-shrink: 0;
   }
-  .hero h1 { margin: 0 0 6px; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
-  .hero .sub { color: var(--muted); font-size: 14px; }
+  .hero-name { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.2; }
+  .hero-tag { font-size: 11px; color: var(--accent); }
 
-  /* ── BADGES ── */
-  .badges { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 20px 4px; }
-  .badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 7px 13px; border-radius: 20px;
-    font-size: 13px; font-weight: 600;
-    background: var(--card);
+  .food-block { background: var(--bg-food); border-radius: 16px; overflow: hidden; }
+  .food-img-area {
+    position: relative; width: 100%; height: 140px;
+    background: #220E00;
+    display: flex; align-items: center; justify-content: center;
   }
-  .badge .dot { width: 8px; height: 8px; border-radius: 50%; }
-  .badge.time { color: #ffb27a; background: rgba(242,99,33,0.12); }
-  .badge.diff .dot { background: var(--green); }
-  .badge.cuisine .dot { background: #3aa0ff; }
+  .food-img-area img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .food-emoji { font-size: 64px; }
+  .food-overlay {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 60px;
+    background: linear-gradient(transparent, #1C0C00);
+  }
+  .food-details { padding: 12px 14px 14px; }
+  .food-name { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .food-desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+  .badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+  .badge.time { background: #1A0800; color: #FF6B35; }
+  .badge.diff { background: #001A08; color: #4ADE80; }
+  .badge.cuisine { background: #00081A; color: #60A5FA; }
 
   /* ── TABS ── */
-  .tabs { display: flex; border-bottom: 1px solid var(--line); margin: 16px 0 0; position: sticky; top: 0; background: var(--bg); z-index: 5; }
+  .tabs { display: flex; background: #080808; border-bottom: 0.5px solid #1A1A1A; position: relative; }
   .tab {
-    flex: 1; text-align: center; padding: 15px 4px;
-    color: var(--muted); font-size: 14.5px; font-weight: 600;
-    cursor: pointer; border-bottom: 2px solid transparent;
-    transition: color .15s;
+    flex: 1; text-align: center; padding: 13px 8px;
+    font-size: 13px; font-weight: 500; color: var(--text-muted);
+    background: none; border: none; cursor: pointer; transition: color .2s;
   }
-  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
-
-  .panel { padding: 20px; display: none; }
-  .panel.active { display: block; animation: fade .2s ease; }
-  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-
-  .section-title { font-size: 12px; letter-spacing: 1.5px; color: var(--muted); font-weight: 700; margin: 0 0 14px; }
-
-  /* ── INGREDIENTS GRID ── */
-  .ing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .ing-card {
-    background: var(--card); border-radius: 14px; padding: 14px 14px 14px 16px;
-    position: relative; overflow: hidden;
+  .tab.on { color: var(--accent); }
+  .ind {
+    position: absolute; bottom: 0; height: 2px; width: 33.33%; left: 0;
+    background: var(--accent); border-radius: 2px;
+    transition: left .3s cubic-bezier(.4,0,.2,1);
   }
-  .ing-card::before {
-    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
-    background: var(--dot, var(--accent));
-  }
-  .ing-card .nom { font-weight: 700; font-size: 15px; margin-bottom: 3px; }
-  .ing-card .miqdor { color: var(--muted); font-size: 13px; }
 
-  /* ── STEPS ── */
-  .step { display: flex; gap: 14px; padding: 6px 0 22px; }
-  .step:not(:last-child) { border-bottom: 1px solid var(--line); margin-bottom: 6px; }
+  /* ── BODY ── */
+  .body { padding: 16px; }
+  .tab-content { display: none; }
+  .tab-content.on { display: block; animation: fade .2s ease; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .sec-title {
+    font-size: 11px; color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: .8px; margin-bottom: 12px;
+  }
+
+  /* Masalliqlar */
+  .ingr-list { display: flex; flex-direction: column; gap: 8px; }
+  .ingr-row {
+    background: var(--bg-card); border-radius: 12px; padding: 12px 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    border: 0.5px solid var(--border);
+  }
+  .ingr-left { display: flex; align-items: center; gap: 10px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .ingr-name { font-size: 13px; color: #eee; }
+  .ingr-qty { font-size: 13px; color: #555; }
+
+  .nutr { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
+  .nutr-card { background: var(--bg-card); border-radius: 10px; padding: 12px 4px; text-align: center; }
+  .nutr-val { font-size: 15px; font-weight: 700; }
+  .nutr-lab { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+
+  /* Tayyorlash */
+  .step { display: flex; gap: 12px; padding: 14px 0; border-bottom: 0.5px solid #141414; }
+  .step.last { border-bottom: none; }
+  .step-left { display: flex; flex-direction: column; align-items: center; }
   .step-num {
-    flex: 0 0 30px; width: 30px; height: 30px; border-radius: 50%;
-    background: var(--accent); color: #fff; font-weight: 700; font-size: 14px;
+    width: 28px; height: 28px; border-radius: 9px; flex-shrink: 0;
+    background: var(--accent); color: #fff; font-size: 12px; font-weight: 700;
     display: flex; align-items: center; justify-content: center;
   }
-  .step-body { flex: 1; }
-  .step-body .st { font-weight: 700; font-size: 16px; margin: 3px 0 6px; }
-  .step-body .desc { color: #c8ccd4; font-size: 14.5px; line-height: 1.55; }
-  .step-time { color: #6fb1ff; font-size: 13px; margin-top: 8px; font-weight: 600; }
-  .tip {
-    margin-top: 10px; padding: 11px 13px; border-radius: 10px;
-    background: var(--accent-soft); border-left: 3px solid var(--accent);
-    color: #ffce9e; font-size: 13.5px; line-height: 1.5;
+  .step-line { width: 1px; flex: 1; background: var(--border); margin-top: 6px; }
+  .step-right { flex: 1; padding-bottom: 2px; }
+  .step-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 5px; }
+  .step-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+  .step-tip {
+    background: #1A0800; border-left: 2px solid var(--accent); border-radius: 8px;
+    padding: 6px 10px; font-size: 12px; color: var(--accent); line-height: 1.45;
+    margin-top: 8px;
   }
+  .step-time { font-size: 11px; color: #60A5FA; margin-top: 8px; }
 
-  /* ── ADVICE ── */
-  .advice-box { background: rgba(41,196,107,0.08); border: 1px solid rgba(41,196,107,0.25); border-radius: 14px; padding: 16px; }
-  .advice { display: flex; gap: 11px; font-size: 14.5px; line-height: 1.5; color: #d6dae2; }
-  .advice:not(:last-child) { margin-bottom: 14px; }
-  .advice .ico { flex: 0 0 22px; font-size: 18px; }
+  /* Maslahatlar */
+  .tip {
+    background: var(--bg-card2); border-radius: 12px; padding: 12px 14px;
+    display: flex; gap: 10px; border: 0.5px solid #142000; margin-bottom: 8px;
+  }
+  .tip-ico { font-size: 18px; flex-shrink: 0; }
+  .tip-txt { font-size: 13px; color: #888; line-height: 1.5; }
 
-  /* ── NUTRITION ── */
-  .nut-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 22px; }
-  .nut { background: var(--card); border-radius: 14px; padding: 14px 8px; text-align: center; }
-  .nut .val { font-size: 18px; font-weight: 800; }
-  .nut .lab { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  /* ── BOTTOM ── */
+  .bottom { padding: 12px 16px 20px; background: var(--bg-main); border-top: 0.5px solid #141414; }
+  .btn-row { display: flex; gap: 8px; }
+  .btn {
+    flex: 1; min-height: 48px; border-radius: 14px; border: none;
+    font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity .15s;
+  }
+  .btn:active { opacity: .8; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-secondary { background: #1A1A1A; color: #888; border: 0.5px solid #242424; }
 
-  /* ── LOADER / ERROR ── */
-  .center { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: var(--muted); }
-  .spinner { width: 42px; height: 42px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  /* Loader / Error */
+  .center { min-height: 80vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 14px; color: var(--text-secondary); }
+  .spinner { width: 38px; height: 38px; border: 3px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
@@ -143,157 +165,207 @@
   <div>Retseptni yuklab bo'lmadi.</div>
 </div>
 
-<div id="content" class="hidden">
+<div id="app" class="hidden">
+  <!-- HERO -->
   <div class="hero">
-    <img id="heroImg" class="hero-img hidden" alt="">
-    <div id="heroIcon" class="hero-icon">🍳</div>
-    <h1 id="title"></h1>
-    <div class="sub" id="subtitle"></div>
+    <div class="hero-row">
+      <div class="logo">🍳</div>
+      <div>
+        <div class="hero-name">Aqlli Retsept</div>
+        <div class="hero-tag">@AqllRetseptBot</div>
+      </div>
+    </div>
+    <div class="food-block">
+      <div class="food-img-area">
+        <img id="foodImg" class="hidden" alt="">
+        <div id="foodEmoji" class="food-emoji">🍽</div>
+        <div class="food-overlay"></div>
+      </div>
+      <div class="food-details">
+        <div class="food-name" id="foodName"></div>
+        <div class="food-desc" id="foodDesc"></div>
+        <div class="badges">
+          <span class="badge time">⏱ <span id="bTime"></span></span>
+          <span class="badge diff" id="bDiff"></span>
+          <span class="badge cuisine" id="bCuisine"></span>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="badges">
-    <span class="badge time">⏱ <span id="bTime"></span></span>
-    <span class="badge diff"><span class="dot"></span><span id="bDiff"></span></span>
-    <span class="badge cuisine"><span class="dot"></span><span id="bCuisine"></span></span>
-  </div>
-
+  <!-- TABS -->
   <div class="tabs">
-    <div class="tab active" data-tab="ing">Masalliqlar</div>
-    <div class="tab" data-tab="steps">Tayyorlash</div>
-    <div class="tab" data-tab="tips">Maslahatlar</div>
+    <button class="tab on" onclick="switchTab(0,this)">Masalliqlar</button>
+    <button class="tab" onclick="switchTab(1,this)">Tayyorlash</button>
+    <button class="tab" onclick="switchTab(2,this)">Maslahatlar</button>
+    <div class="ind" id="ind"></div>
   </div>
 
-  <div class="panel active" id="panel-ing">
-    <div class="section-title">KERAKLI MASALLIQLAR</div>
-    <div class="ing-grid" id="ingGrid"></div>
+  <!-- BODY -->
+  <div class="body">
+    <div class="tab-content on" id="tab0">
+      <div class="sec-title">Kerakli masalliqlar</div>
+      <div class="ingr-list" id="ingrList"></div>
+      <div class="nutr" id="nutr"></div>
+    </div>
+    <div class="tab-content" id="tab1">
+      <div class="sec-title">Bosqichma-bosqich</div>
+      <div id="stepsList"></div>
+    </div>
+    <div class="tab-content" id="tab2">
+      <div class="sec-title">Oshpaz maslahatlari</div>
+      <div id="tipsList"></div>
+    </div>
   </div>
 
-  <div class="panel" id="panel-steps">
-    <div class="section-title">BOSQICHMA-BOSQICH</div>
-    <div id="stepsList"></div>
-  </div>
-
-  <div class="panel" id="panel-tips">
-    <div class="section-title">OSHPAZ MASLAHATLARI</div>
-    <div class="advice-box" id="adviceBox"></div>
-    <div class="section-title" style="margin-top:24px">OZUQA QIYMATI (TAXMINIY)</div>
-    <div class="nut-grid" id="nutGrid"></div>
+  <!-- BOTTOM -->
+  <div class="bottom">
+    <div class="btn-row">
+      <button class="btn btn-primary" id="saveBtn">❤️ Saqlash</button>
+      <button class="btn btn-secondary" id="restartBtn">🔄 Boshqa taom</button>
+    </div>
   </div>
 </div>
 
 <script>
-  // Telegram WebApp SDK (Telegram ichida bo'lsa) — kengaytirish va mavzu
   const tg = window.Telegram && window.Telegram.WebApp;
   if (tg) { tg.ready(); tg.expand(); }
 
-  const DOT_COLORS = ["#f26321", "#f2c531", "#9b7bff", "#ff7ab3", "#29c46b", "#3aa0ff", "#ff6b6b"];
+  const DOT_COLORS = ["#FF6B35", "#F59E0B", "#A78BFA", "#34D399", "#60A5FA", "#F472B6"];
+  const TIP_ICONS = ["🔥", "🔪", "🧂", "🌶️", "🍽️", "✨", "👨‍🍳"];
+  let currentRecipe = null;
 
-  // Demo retsept (brauzerda backend'siz ko'rish uchun: ?demo=1)
+  // Demo retsept (?demo=1 — brauzerda backend'siz ko'rish uchun)
   const DEMO = {
-    taom: "Qovurma kartoshka", oshxona: "O'zbek", vaqt_daqiqa: 25,
-    qiyinlik: "Oson", porsiya: "2 kishi uchun",
+    taom: "Mini pitsa non ustida", oshxona: "Universal", vaqt_daqiqa: 15,
+    qiyinlik: "Oson", porsiya: "2 kishi uchun", rasm_url: null,
     masalliqlar: [
-      {nom:"Kartoshka", miqdor:"3 ta (o'rta)"}, {nom:"Tuxum", miqdor:"2 ta"},
-      {nom:"Piyoz", miqdor:"1 ta (katta)"}, {nom:"O'simlik yog'i", miqdor:"3 osh q."},
-      {nom:"Tuz", miqdor:"ta'mga qarab"}, {nom:"Ko'k piyoz", miqdor:"bir dasta (ixtiyoriy)"}
+      {nom:"Non", miqdor:"2 bo'lak"}, {nom:"Pomidor", miqdor:"1 ta"},
+      {nom:"Pishloq", miqdor:"100 g"}, {nom:"Kolbasa", miqdor:"50 g"},
+      {nom:"Ketchup", miqdor:"2 osh q."}, {nom:"Ko'kat", miqdor:"ozgina"}
     ],
     bosqichlar: [
-      {raqam:1, sarlavha:"Kartoshkani tayyorlang", tavsif:"Kartoshkani artib, po'stlog'ini tozalang. Ingichka doira yoki tasmachalar shaklida to'g'rang — 3–4 mm qalinlikda.", maslahat:"To'g'rangan kartoshkani 5 daqiqa sovuq suvda tuting — kraxmal chiqadi va qovurilganda qars-qars bo'ladi", vaqt_daqiqa:5},
-      {raqam:2, sarlavha:"Piyozni qovuring", tavsif:"Piyozni yarimdoira shaklida to'g'rang. Katta idishga yog' solib, o'rtacha o'tda piyozni oltin rang bo'lguncha qovuring.", maslahat:"Piyoz shaffof bo'lib oltin rangga kirsa — to'g'ri vaqt. Qorayib ketsa achchiq bo'ladi", vaqt_daqiqa:6}
+      {raqam:1, sarlavha:"Nonni tayyorlang", tavsif:"Nonni ikkiga bo'lib, ustiga ketchup suring.", maslahat:"Non quruq bo'lsa, biroz suv sepib yumshating.", vaqt_daqiqa:3},
+      {raqam:2, sarlavha:"Tarkibni joylang", tavsif:"Pomidor, kolbasa va pishloqni non ustiga teng joylang.", maslahat:"Pishloqni eng ustiga soling — yaxshi eriydi.", vaqt_daqiqa:4},
+      {raqam:3, sarlavha:"Pishiring", tavsif:"180°C duxovkada 8 daqiqa, pishloq erib oltin rang olguncha pishiring.", maslahat:"", vaqt_daqiqa:8}
     ],
     oshpaz_maslahatlari: [
-      "Idish yaxshi qizib olgan bo'lishi kerak, aks holda kartoshka yopishadi",
-      "Tuzni oxirida soling, boshida solsangiz suv chiqib qovurilmaydi"
+      "Issiq holda iste'mol qiling — pishloq cho'ziladi.",
+      "Achchiqroq bo'lsin desangiz, qalampir qo'shing."
     ],
-    kaloriya:320, oqsil:"12g", uglerod:"38g", yog_miqdori:"14g"
+    kaloriya: 380, oqsil: "18g", uglerod: "32g", yog_miqdori: "16g"
   };
 
-  function render(r) {
-    document.getElementById("title").textContent = r.taom || "Taom";
-    document.getElementById("subtitle").textContent =
-      `${r.oshxona || ""} oshxonasi • ${r.porsiya || ""}`;
-    document.getElementById("bTime").textContent = (r.vaqt_daqiqa || "?") + " daqiqa";
-    document.getElementById("bDiff").textContent = r.qiyinlik || "—";
-    document.getElementById("bCuisine").textContent = r.oshxona || "—";
+  function switchTab(index, el) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('on'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+    document.getElementById('tab' + index).classList.add('on');
+    el.classList.add('on');
+    document.getElementById('ind').style.left = (index * 33.33) + '%';
+  }
 
+  function render(r) {
+    currentRecipe = r;
+
+    document.getElementById('foodName').textContent = r.taom || "Taom";
+    document.getElementById('foodDesc').textContent =
+      `${r.oshxona || ""} oshxonasi · ${r.porsiya || ""}`;
+    document.getElementById('bTime').textContent = (r.vaqt_daqiqa || "?") + " daqiqa";
+    document.getElementById('bDiff').textContent = r.qiyinlik || "—";
+    document.getElementById('bCuisine').textContent = r.oshxona || "—";
+
+    // Rasm yoki emoji fallback
     if (r.rasm_url) {
-      const img = document.getElementById("heroImg");
-      img.src = r.rasm_url; img.classList.remove("hidden");
-      document.getElementById("heroIcon").classList.add("hidden");
+      const img = document.getElementById('foodImg');
+      img.src = r.rasm_url;
+      img.onload = () => {
+        img.classList.remove('hidden');
+        document.getElementById('foodEmoji').classList.add('hidden');
+      };
+      img.onerror = () => { img.classList.add('hidden'); };
     }
 
     // Masalliqlar
-    const ig = document.getElementById("ingGrid");
+    const il = document.getElementById('ingrList');
+    il.innerHTML = "";
     (r.masalliqlar || []).forEach((m, i) => {
-      const d = document.createElement("div");
-      d.className = "ing-card";
-      d.style.setProperty("--dot", DOT_COLORS[i % DOT_COLORS.length]);
-      d.innerHTML = `<div class="nom"></div><div class="miqdor"></div>`;
-      d.querySelector(".nom").textContent = m.nom || "";
-      d.querySelector(".miqdor").textContent = m.miqdor || "";
-      ig.appendChild(d);
+      const row = document.createElement('div');
+      row.className = 'ingr-row';
+      row.innerHTML =
+        `<div class="ingr-left"><span class="dot"></span><span class="ingr-name"></span></div>` +
+        `<span class="ingr-qty"></span>`;
+      row.querySelector('.dot').style.background = DOT_COLORS[i % DOT_COLORS.length];
+      row.querySelector('.ingr-name').textContent = m.nom || "";
+      row.querySelector('.ingr-qty').textContent = m.miqdor || "";
+      il.appendChild(row);
+    });
+
+    // Ozuqa qiymati
+    const nuts = [
+      {val: r.kaloriya, lab: "Kaloriya", c: "#FF6B35"},
+      {val: r.oqsil, lab: "Oqsil", c: "#60A5FA"},
+      {val: r.uglerod, lab: "Uglevod", c: "#F59E0B"},
+      {val: r.yog_miqdori, lab: "Yog'", c: "#F472B6"}
+    ];
+    const nu = document.getElementById('nutr');
+    nu.innerHTML = "";
+    nuts.forEach(n => {
+      const c = document.createElement('div');
+      c.className = 'nutr-card';
+      c.innerHTML = `<div class="nutr-val"></div><div class="nutr-lab"></div>`;
+      const v = c.querySelector('.nutr-val');
+      v.textContent = (n.val ?? "—"); v.style.color = n.c;
+      c.querySelector('.nutr-lab').textContent = n.lab;
+      nu.appendChild(c);
     });
 
     // Bosqichlar
-    const sl = document.getElementById("stepsList");
-    (r.bosqichlar || []).forEach((b) => {
-      const s = document.createElement("div");
-      s.className = "step";
-      let html = `<div class="step-num">${b.raqam || ""}</div><div class="step-body">`;
-      html += `<div class="st"></div><div class="desc"></div>`;
+    const sl = document.getElementById('stepsList');
+    sl.innerHTML = "";
+    const steps = r.bosqichlar || [];
+    steps.forEach((b, i) => {
+      const last = i === steps.length - 1;
+      const s = document.createElement('div');
+      s.className = 'step' + (last ? ' last' : '');
+      let html = `<div class="step-left"><div class="step-num">${b.raqam || (i+1)}</div>`;
+      if (!last) html += `<div class="step-line"></div>`;
+      html += `</div><div class="step-right"><div class="step-title"></div><div class="step-desc"></div>`;
+      if (b.maslahat) html += `<div class="step-tip">💡 <span class="tiptext"></span></div>`;
       if (b.vaqt_daqiqa) html += `<div class="step-time">⏱ ${b.vaqt_daqiqa} daqiqa</div>`;
-      if (b.maslahat) html += `<div class="tip">💡 <span class="tiptext"></span></div>`;
       html += `</div>`;
       s.innerHTML = html;
-      s.querySelector(".st").textContent = b.sarlavha || "";
-      s.querySelector(".desc").textContent = b.tavsif || "";
-      if (b.maslahat) s.querySelector(".tiptext").textContent = b.maslahat;
+      s.querySelector('.step-title').textContent = b.sarlavha || "";
+      s.querySelector('.step-desc').textContent = b.tavsif || "";
+      if (b.maslahat) s.querySelector('.tiptext').textContent = b.maslahat;
       sl.appendChild(s);
     });
 
     // Maslahatlar
-    const ICONS = ["🔥","🔪","🧂","🌶️","🍽️","✨","👨‍🍳"];
-    const ab = document.getElementById("adviceBox");
-    (r.oshpaz_maslahatlari || []).forEach((m, i) => {
-      const a = document.createElement("div");
-      a.className = "advice";
-      a.innerHTML = `<span class="ico">${ICONS[i % ICONS.length]}</span><span class="txt"></span>`;
-      a.querySelector(".txt").textContent = m;
-      ab.appendChild(a);
+    const tl = document.getElementById('tipsList');
+    tl.innerHTML = "";
+    (r.oshpaz_maslahatlari || []).forEach((t, i) => {
+      const d = document.createElement('div');
+      d.className = 'tip';
+      d.innerHTML = `<span class="tip-ico">${TIP_ICONS[i % TIP_ICONS.length]}</span><span class="tip-txt"></span>`;
+      d.querySelector('.tip-txt').textContent = t;
+      tl.appendChild(d);
     });
 
-    // Ozuqa
-    const nuts = [
-      {val: r.kaloriya, lab: "Kaloriya"}, {val: r.oqsil, lab: "Oqsil"},
-      {val: r.uglerod, lab: "Uglerod"}, {val: r.yog_miqdori, lab: "Yog'"}
-    ];
-    const ng = document.getElementById("nutGrid");
-    nuts.forEach(n => {
-      const d = document.createElement("div");
-      d.className = "nut";
-      d.innerHTML = `<div class="val"></div><div class="lab"></div>`;
-      d.querySelector(".val").textContent = (n.val ?? "—");
-      d.querySelector(".lab").textContent = n.lab;
-      ng.appendChild(d);
-    });
-
-    document.getElementById("loading").classList.add("hidden");
-    document.getElementById("content").classList.remove("hidden");
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
   }
 
   function showError() {
-    document.getElementById("loading").classList.add("hidden");
-    document.getElementById("error").classList.remove("hidden");
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('error').classList.remove('hidden');
   }
 
-  // Tab almashtirish
-  document.querySelectorAll(".tab").forEach(t => {
-    t.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
-      document.querySelectorAll(".panel").forEach(x => x.classList.remove("active"));
-      t.classList.add("active");
-      document.getElementById("panel-" + t.dataset.tab).classList.add("active");
-    });
+  // Pastki tugmalar — Telegram'ga ma'lumot yuborish
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    if (tg) tg.sendData(JSON.stringify({ action: 'save', taom: currentRecipe ? currentRecipe.taom : '' }));
+  });
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    if (tg) tg.sendData(JSON.stringify({ action: 'restart' }));
   });
 
   // Havoladagi siqilgan (gzip+base64) retsept ma'lumotini ochadi
@@ -306,10 +378,7 @@
     return JSON.parse(new TextDecoder("utf-8").decode(buf));
   }
 
-  // Ma'lumotni yuklash:
-  //  ?d=...    -> retsept havolaning o'ziga siqib joylangan (asosiy usul)
-  //  ?id=...   -> eski usul, backend'dan (zaxira)
-  //  ?demo=1   -> namuna retsept
+  // Ma'lumotni yuklash: ?d= (asosiy), ?id= (zaxira), ?demo=1 (namuna)
   const params = new URLSearchParams(location.search);
   if (params.get("demo")) {
     render(DEMO);
