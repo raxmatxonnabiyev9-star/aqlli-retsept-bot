@@ -89,6 +89,15 @@ _loop: asyncio.AbstractEventLoop | None = None
 _bot_token: str = ""
 
 
+@flask_app.after_request
+def _keshlamaslik(resp):
+    """Mini App eski (keshlangan) retseptni ko'rsatmasligi uchun keshni o'chiramiz."""
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
+
+
 @flask_app.get("/")
 def health():
     """Render uchun health check — bot tirikligini bildiradi."""

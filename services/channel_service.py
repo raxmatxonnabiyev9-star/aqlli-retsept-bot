@@ -97,6 +97,29 @@ class ChannelService:
         """Bu imzo bo'yicha retsept allaqachon kanalga yuborilganmi?"""
         return sig in self._imzolar
 
+    async def _kanalga_yubor(self, caption: str, rasm_url: str | None) -> bool:
+        """Retseptni kanalga yuboradi. Markdown buzilgan bo'lsa formatlashsiz qayta urinadi.
+
+        Muvaffaqiyatli yuborilsa True, aks holda False qaytaradi.
+        """
+        for parse_mode in ("Markdown", None):
+            try:
+                if rasm_url:
+                    await self._bot.send_photo(
+                        chat_id=self._channel_id, photo=rasm_url,
+                        caption=caption[:1024], parse_mode=parse_mode,
+                    )
+                else:
+                    await self._bot.send_message(
+                        chat_id=self._channel_id, text=caption[:4096], parse_mode=parse_mode,
+                    )
+                return True
+            except Exception as e:  # noqa: BLE001
+                # Markdown xatosi bo'lsa formatlashsiz qayta urinamiz; oxirgi urinish ham
+                # muvaffaqiyatsiz bo'lsa False qaytaramiz
+                logger.warning("Kanalga yuborishda xato (parse_mode=%s): %s", parse_mode, e)
+        return False
+
     async def saqla(self, retsept: dict, caption: str, rasm_url: str | None, sig: str) -> None:
         """Retseptni keshga qo'shadi va (faqat yangi bo'lsa) kanalga yuboradi.
 
@@ -110,21 +133,11 @@ class ChannelService:
                         retsept.get("taom"))
             return
 
-        # Yangi retsept — kanalga joylaymiz
-        try:
-            if rasm_url:
-                await self._bot.send_photo(
-                    chat_id=self._channel_id, photo=rasm_url,
-                    caption=caption[:1024], parse_mode="Markdown",
-                )
-            else:
-                await self._bot.send_message(
-                    chat_id=self._channel_id, text=caption[:4096], parse_mode="Markdown",
-                )
-            logger.info("Retsept kanalga saqlandi: %s", retsept.get("taom"))
-        except Exception as e:  # noqa: BLE001
-            logger.error("Kanalga saqlashda xato: %s", e)
+        # Yangi retsept — kanalga joylaymiz (Markdown buzilsa, formatlashsiz qayta urinamiz)
+        if not await self._kanalga_yubor(caption, rasm_url):
+            logger.error("Retseptni kanalga yuborib bo'lmadi: %s", retsept.get("taom"))
             return  # yuborilmadi — imzoni ham qo'shmaymiz
+        logger.info("Retsept kanalga saqlandi: %s", retsept.get("taom"))
 
         # Imzoni indeksga qo'shib, pinned xabarni yangilaymiz
         self._imzolar.append(sig)
