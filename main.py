@@ -55,7 +55,7 @@ def env_oqi(nom: str, majburiy: bool = True) -> str:
 
 def application_yarat() -> Application:
     """python-telegram-bot Application'ini yaratadi va handlerlarni ro'yxatdan o'tkazadi."""
-    gemini_key = env_oqi("GEMINI_API_KEY")
+    groq_key = env_oqi("GROQ_API_KEY")
     unsplash_key = env_oqi("UNSPLASH_ACCESS_KEY", majburiy=False)
     channel_id = env_oqi("CHANNEL_ID", majburiy=False)
 
@@ -63,8 +63,8 @@ def application_yarat() -> Application:
 
     # Servislarni bot_data ga joylaymiz (kanal servisi initialize'dan keyin qo'shiladi)
     # Izoh: bot_data kaliti "claude" tarixiy sabablarga ko'ra saqlangan (handlerlar
-    # shu kalitdan o'qiydi); endi uning ortida Gemini AIService turadi.
-    app.bot_data["claude"] = AIService(api_key=gemini_key)
+    # shu kalitdan o'qiydi); endi uning ortida Groq AIService turadi.
+    app.bot_data["claude"] = AIService(api_key=groq_key)
     app.bot_data["unsplash"] = UnsplashService(access_key=unsplash_key)
     app.bot_data["channel_id"] = channel_id
 
