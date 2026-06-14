@@ -23,9 +23,9 @@ import PIL.Image
 logger = logging.getLogger(__name__)
 
 # Tezkor, bepul va rasm tahlil qila oladigan model.
-# Eslatma: gemini-1.5-flash iste'foga chiqarilgan, shuning uchun hozirgi
-# barqaror tezkor model ishlatiladi.
-MODEL = "gemini-2.5-flash"
+# Eslatma: gemini-2.5-flash ning bepul kunlik limiti juda kichik (20 so'rov/kun),
+# shuning uchun bepul kunlik limiti kattaroq bo'lgan gemini-2.0-flash ishlatiladi.
+MODEL = "gemini-2.0-flash"
 
 # JSON parse xatosida nechi marta qayta urinish
 MAX_URINISH = 2

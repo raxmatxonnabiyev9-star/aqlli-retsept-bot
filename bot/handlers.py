@@ -67,16 +67,9 @@ async def matn_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     holat = await update.message.reply_text(messages.QAYTA_ISHLANMOQDA)
 
-    try:
-        # Claude orqali standart nomlarga keltiramiz
-        masalliqlar = await _claude(context).normallashtir(user_input)
-    except AIXatosi:
-        # Claude ishlamasa — offline normallashtirishga tushamiz
-        logger.warning("Normallashtirish uchun offline rejimga o'tildi")
-        masalliqlar = normalizer.normallashtir(bolaklar)
-
-    # Har ehtimolga qarshi offline normallashtirishni ham qo'llaymiz
-    masalliqlar = normalizer.normallashtir(masalliqlar)
+    # Masalliqlarni offline (lug'at asosida) normallashtiramiz — Gemini kvotasini
+    # tejash uchun bu yerda AI chaqirilmaydi.
+    masalliqlar = normalizer.normallashtir(bolaklar)
 
     if len(masalliqlar) < 2:
         await holat.edit_text(messages.KAM_MASALLIQ)
